@@ -1,0 +1,140 @@
+version: "3.9"
+services:
+  api: &api
+    build:
+      context: .
+      dockerfile: docker/dev/Dockerfile
+    image: onize/mipad-api
+    command: python manage.py runserver 0.0.0.0:10008
+    volumes:
+      - ./app:/app
+    ports:
+      - "10008:10008"
+    env_file:
+      - ./.env
+    restart: always
+
+  # report_api: &report_api
+  #   build:
+  #     context: .
+  #     dockerfile: docker/dev/report/Dockerfile
+  #   image: prunedge/polleasy-report
+  #   command: python manage.py runserver 0.0.0.0:10008
+  #   volumes:
+  #     - ./report:/app
+  #   ports:
+  #     - "10008:10008"
+  #   env_file:
+  #     - ./.env
+  #   restart: always
+
+  # api_queue:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/dev/Dockerfile
+  #   command: python consumer.py
+  #   volumes:
+  #     - ./app:/app
+  #   env_file:
+  #     - ./.env
+  #   restart: always
+  #   depends_on:
+  #     - api
+
+  # report_api_queue:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/dev/report/Dockerfile
+  #   command: python consumer.py
+  #   volumes:
+  #     - ./report:/app
+  #   env_file:
+  #     - ./.env
+  #   restart: always
+  #   depends_on:
+  #     - report_api
+    
+  redis:
+    image: bitnami/redis:latest
+    ports:
+      - "6379:6379"
+    env_file:
+      - ./.env
+
+  # rabbitmq:
+  #   image: bitnami/rabbitmq:latest
+  #   ports:
+  #     - "15672:15672"
+  #     - "5671:5671"
+  #     - "5672:5672"
+  #   env_file:
+  #     - ./.env
+
+  celery:
+    <<: *api
+    command: celery -A core.celery worker --pool=threads --loglevel=info --logfile=logs/celery.log
+    ports: []
+    volumes:
+      - ./app:/app
+    env_file:
+      - ./.env
+    depends_on:
+      - api
+
+  # report_celery:
+  #   <<: *report_api
+  #   command: celery -A core.celery worker --pool=threads --loglevel=info --logfile=logs/celery.log
+  #   ports: []
+  #   volumes:
+  #     - ./report:/app
+  #   env_file:
+  #     - ./.env
+  #   depends_on:
+  #     - report_api
+
+  celery-beat:
+    <<: *api
+    command: celery -A core beat -l info
+    ports: []
+    volumes:
+      - ./app:/app
+    env_file:
+      - ./.env
+    depends_on:
+      - celery
+
+  # report_celery-beat:
+  #   <<: *report_api
+  #   command: celery -A core beat -l info
+  #   ports: []
+  #   volumes:
+  #     - ./report:/app
+  #   env_file:
+  #     - ./.env
+  #   depends_on:
+  #     - celery
+
+  # dashboard:
+  #   <<: *api
+  #   command: celery --broker=${RABBITMQ_URL} flower --port=5555
+  #   ports:
+  #     - "25559:5555"
+  #   env_file:
+  #     - ./.env
+  #   depends_on:
+  #     - api
+  #     - celery
+
+  # locust-master:
+  #   image: locustio/locust
+  #   ports:
+  #     - "8089:8089"
+  #   volumes:
+  #     - ./app:/app
+  #   command: -f /app/locustfile.py --master -H http://local-master:8089
+
+  # locust-worker:
+  #   image: locustio/locust
+  #   volumes:
+  #     - ./app:/app
+  #   command: -f /app/locustfile.py --worker --master-host locust-master
