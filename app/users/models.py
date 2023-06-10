@@ -1,4 +1,6 @@
 import uuid
+import random
+
 from datetime import datetime, timezone
 
 from django.db import models
@@ -17,6 +19,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     preferred_name = models.CharField(max_length=255, null=True)
     email = models.EmailField(unique=True)
     pin = models.CharField(max_length=15)
+    verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     last_login = models.DateTimeField(null=True)
@@ -39,6 +42,23 @@ class User(AbstractBaseUser, PermissionsMixin):
         self.last_login = datetime.now(timezone.utc)
         self.save()
 
+    @property
+    def status(self):
+        if self.is_active and self.verified:
+            return 'ACTIVE'
+        elif not self.is_active and self.verified:
+            return 'DEACTIVATED'
+        elif not self.is_active and not self.verified:
+            return 'PENDING'
+
+    @property
+    def generate_code(self, length=4):
+        digits = "0123456789"
+        otp = ""
+        for _ in range(length):
+            otp += random.choice(digits)
+        return otp
+    
 
     class Profile(AuditableModel):
         user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
