@@ -9,7 +9,7 @@ from django.template.loader import get_template
 from django.core.files import File
 from urllib.request import urlretrieve
 import math
-import random
+
 
 
 def get_client_url(user):
@@ -28,15 +28,11 @@ def send_sms_template(user_data):
     return text_alternative
 
 
-
-
-
-
-def generate_otp(length=4):
+def generate_code(length=6):
     digits = "0123456789"
-    otp = ""
+    code = ""
 
     for _ in range(length):
-        otp += random.choice(digits)
+        code += random.choice(digits)
 
-    return otp
+    return code
