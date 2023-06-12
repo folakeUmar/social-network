@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .models import User
-from .serializers import VerificationCodeSerializer, CustomObtainTokenPairSerializer, CreateUserSerializer
+from .serializers import VerifyTokenSerializer, CustomObtainTokenPairSerializer, CreateUserSerializer
 
 
 CACHE_TTL = getattr(settings, "CACHE_TTL", DEFAULT_TIMEOUT)
@@ -30,27 +30,26 @@ class AuthViewSet(viewsets.ModelViewSet):
     """User ViewSets"""
 
     queryset = get_user_model().object.all()
-    serializer_class = VerificationCodeSerializer
+    serializer_class = CreateUserSerializer
     http_method_names = ["get", "post"]
   
     def get_serializer_class(self):
      
-        if self.action == 'send_code':
-            return VerificationCodeSerializer
-        # elif self.action == 'create':
-        #     return CreateUserSerializer   
+        if self.action == 'verify_token':
+            return VerifyTokenSerializer
+        elif self.action == 'create':
+            return CreateUserSerializer   
         return super().get_serializer_class()
     
 
     @action(
         methods=["POST"],
         detail=False,
-        url_path="send-code",
+        url_path="verify-token",
     )
-    def send_code(self, request, pk=None):
+    def verify_token(self, request, pk=None):
         serializer = self.get_serializer(
-            data=request.data
-        )
+            data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(
@@ -59,3 +58,42 @@ class AuthViewSet(viewsets.ModelViewSet):
         return Response(
             {"success": False, "errors": serializer.errors}, status.HTTP_400_BAD_REQUEST
         )
+
+
+
+
+# class CustomObtainTokenPairView(TokenObtainPairView):
+#     """Login with email and password"""
+
+#     queryset = get_user_model().objects.all()
+#     serializer_class = CreateUserSerializer
+#     http_method_names = ["get", "post"]
+
+#     def get_serializer_class(self):
+#         if self.action == 'verify_token':
+#             return VerifyTokenSerializer
+#         elif self.action == 'create':
+#             return CreateUserSerializer
+#         return super().get_serializer_class()
+
+#     @action(
+#         methods=["POST"],
+#         detail=False,
+#         url_path="verify-token",
+#     )
+#     def verify_token(self, request, pk=None):
+#         serializer = self.get_serializer(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(
+#                 {"success": True, "data": serializer.data}, status=status.HTTP_200_OK
+#             )
+#         return Response(
+#             {"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
+#         )
+
+#     serializer_class = CustomObtainTokenPairSerializer
+
+
+# class AuthViewSet(viewsets.ModelViewSet):
+#     """User ViewSets"""
