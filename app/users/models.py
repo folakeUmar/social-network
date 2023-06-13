@@ -9,7 +9,7 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from core.models import AuditableModel
 from core import settings
 from .manager import CustomUserManager
-from .enums import CITIES, PROFESSIONS, TOKEN_TYPE
+from .enums import CITIES, USER_PROFESSIONS, TOKEN_TYPE
 from .utils import generate_code
 
 
@@ -17,12 +17,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
+    password = models.CharField(max_length=255)
     preferred_name = models.CharField(max_length=255, null=True)
     email = models.EmailField(unique=True)
     image = models.FileField(upload_to='userphoto/', blank=True, null=True)
     date_of_birth = models.CharField(max_length=255, null=True)
     recognition_year = models.CharField(max_length=255, null=True)
-    professional_field = models.CharField(max_length=255, choices=PROFESSIONS, null=True)
+    professional_field = models.CharField(max_length=255, choices=USER_PROFESSIONS, null=True)
     location = models.CharField(max_length=255, choices=CITIES, null=True)
     bio = models.TextField(null=True)
     verified = models.BooleanField(default=False)
