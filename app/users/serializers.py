@@ -9,7 +9,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import serializers, exceptions
 
 from .models import User, Token
-
+from .enums import USER_PROFESSIONS, CITIES
 from .utils import generate_code
 from .tasks import user_code_email
 
@@ -30,7 +30,7 @@ class CustomObtainTokenPairSerializer(TokenObtainPairSerializer):
         # Add custom claims
         token.id = user.id
         token["email"] = user.email
-        token["preferred_name"] = user.firstname
+        token["preferred_name"] = user.first_name
         return token
 
 
@@ -56,7 +56,6 @@ class CreateUserSerializer(serializers.Serializer):
         user = User.object.create(email=email)
         user.save()
         token = Token.objects.create(token=token, user=user)
-        # email = validated_data.get('email')
         user_data = {'email': email, 'token': token.token,
                      'url': f"{settings.CLIENT_URL}/register/"}    
         user_code_email.delay(user_data)
@@ -84,5 +83,40 @@ class VerifyTokenSerializer(serializers.Serializer):
         user.verified = True
         user.is_active = True
         user.save()
-        print(user.verified, user.is_active)
         return user
+
+
+class UserRegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(required=True)
+    confirm_password = serializers.CharField(required=True)
+    professional_field = serializers.ChoiceField(choices=USER_PROFESSIONS, required=False)
+    location = serializers.ChoiceField(choices=CITIES, required=False)
+
+    class Meta:
+        model = get_user_model()
+        fields = '__all__'
+        extra_kwargs = {
+            'email': {'read_only': True},
+            'is_active': {'read_only': True},
+            'is_staff': {'read_only': True},
+            'last_login': {'read_only': True},
+            'created_at': {'read_only': True},
+            'verified': {'read_only': True},
+            'group': {'read_only': True},
+        }
+
+    def validate(self, attrs):
+        password = attrs['password']
+        confirm_password = attrs['confirm_password']
+        if password != confirm_password:
+            raise serializers.ValidationError('Passwords do not match!')
+        return super().validate(attrs)
+    
+    def update(self, instance, validated_data):
+        confirm_password = validated_data.pop('confirm_password', None)
+        password = validated_data['password']
+        print(instance.password)
+        super().update(instance, validated_data)
+        instance.set_password(password)
+        instance.save()
+        return instance
