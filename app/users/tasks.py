@@ -15,3 +15,13 @@ def user_code_email(email_data):
     text_alternative = text_template.render(email_data)
     send_email('User Registration',
                email_data['email'], html_alternative, text_alternative)
+
+
+@APP.task()
+def send_password_reset_email(email_data):
+    html_template = get_template('emails/user_code_email.html')
+    text_template = get_template('emails/user_code_email.txt')
+    html_alternative = html_template.render(email_data)
+    text_alternative = text_template.render(email_data)
+    send_email('Password Reset',
+               email_data['email'], html_alternative, text_alternative)

@@ -11,7 +11,7 @@ from rest_framework import serializers, exceptions
 from .models import User, Token
 from .enums import USER_PROFESSIONS, CITIES
 from .utils import generate_code
-from .tasks import user_code_email
+from .tasks import user_code_email, send_password_reset_email
 
 
 class CustomObtainTokenPairSerializer(TokenObtainPairSerializer):
@@ -120,3 +120,58 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         instance.set_password(password)
         instance.save()
         return instance
+    
+    
+class InitializePasswordReesetSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+    def validate(self, attrs):
+        email = attrs['email']
+        self.normalize_email(email)
+        email = get_user_model().objects.filter(email=email).first()
+        attrs['email'] = email
+        active_user = self.context['request'].user.is_active
+
+        if not email:
+            return serializers.ValidationError('Email does not exist')
+        if not active_user:
+            return serializers.ValidationError('No active user found')
+        return super().validate(attrs)
+
+    def create(self, validated_data):
+        email = validate_email['email']
+        user = self.context['request'].user
+        token = generate_code()
+        token = Token.objects.update_or_create(user=user, token_type='PASSWORD_RESET', token=token
+            # defaults={
+            #     'user': user, 'token_type': 'PASSWORD_RESET',
+            #     'token': get_random_string(120),
+            #     },
+            )
+        email_data = {'fullname': user.first_name,
+                        'email': user.email,
+                        'token': token.token,
+                        'url': f"{settings.CLIENT_URL}/passwordreset/?token={token.token}",
+        }
+        send_password_reset_email.delay(email_data)
+
+
+
+
+"""
+to initialize reset password:
+1. accept email
+2. normalize email
+3. check if email or user is_active
+4. if not 3: terminate
+5. if 3: call the create token handler
+6.set token type to "PASSWORD_RESET"
+7. send token to email
+"""
+
+"""
+to actually reset password:
+1. accepts token, password, confirm_password
+2. check if token is valid
+3. 
+"""
