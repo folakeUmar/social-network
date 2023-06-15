@@ -29,7 +29,7 @@ class CustomObtainTokenPairView(TokenObtainPairView):
 class AuthViewSet(viewsets.ModelViewSet):
     """User ViewSets"""
 
-    queryset = get_user_model().object.all()
+    queryset = get_user_model().objects.all()
     serializer_class = CreateUserSerializer
     http_method_names = ["get", "post"]
   
@@ -86,7 +86,7 @@ class AuthViewSet(viewsets.ModelViewSet):
         url_path='initialize_reset',
     )
     def initialize_reset(self, request):
-        serializer = self.get_serializer
+        serializer = self.get_serializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(

@@ -39,7 +39,7 @@ class CreateUserSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         email = attrs['email'].lower().strip()
-        if get_user_model().object.filter(email=email).exists():
+        if get_user_model().objects.filter(email=email).exists():
             raise serializers.ValidationError('Email already exists')
         try:
             valid = validate_email(attrs['email'])
@@ -53,7 +53,7 @@ class CreateUserSerializer(serializers.Serializer):
     def create(self, validated_data):
         email = validated_data['email']
         token = generate_code()
-        user = User.object.create(email=email)
+        user = User.objects.create(email=email)
         user.save()
         token = Token.objects.create(token=token, user=user)
         user_data = {'email': email, 'token': token.token,
@@ -126,12 +126,10 @@ class InitializePasswordReesetSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
 
     def validate(self, attrs):
-        email = attrs['email']
-        self.normalize_email(email)
+        email = attrs['email'].lower().strip()
         email = get_user_model().objects.filter(email=email).first()
         attrs['email'] = email
         active_user = self.context['request'].user.is_active
-
         if not email:
             return serializers.ValidationError('Email does not exist')
         if not active_user:
@@ -139,35 +137,21 @@ class InitializePasswordReesetSerializer(serializers.Serializer):
         return super().validate(attrs)
 
     def create(self, validated_data):
-        email = validate_email['email']
+        email = validated_data['email']
         user = self.context['request'].user
         token = generate_code()
-        token = Token.objects.update_or_create(user=user, token_type='PASSWORD_RESET', token=token
-            # defaults={
-            #     'user': user, 'token_type': 'PASSWORD_RESET',
-            #     'token': get_random_string(120),
-            #     },
-            )
+        token, created = Token.objects.update_or_create(user=user, token_type='PASSWORD_RESET', token=token)
+        token.save()
         email_data = {'fullname': user.first_name,
                         'email': user.email,
                         'token': token.token,
                         'url': f"{settings.CLIENT_URL}/passwordreset/?token={token.token}",
         }
         send_password_reset_email.delay(email_data)
+        return user
 
 
 
-
-"""
-to initialize reset password:
-1. accept email
-2. normalize email
-3. check if email or user is_active
-4. if not 3: terminate
-5. if 3: call the create token handler
-6.set token type to "PASSWORD_RESET"
-7. send token to email
-"""
 
 """
 to actually reset password:
