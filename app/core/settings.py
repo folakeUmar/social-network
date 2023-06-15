@@ -138,11 +138,11 @@ SPECTACULAR_SETTINGS = {
         "displayRequestDuration": True
     },
     'UPLOADED_FILES_USE_URL': True,
-    'TITLE': 'PollEasy Application API',
+    'TITLE': 'SocialNetwork Application API',
     'DESCRIPTION': 'PollEasy API Doc',
     'VERSION': '1.0.0',
     'LICENCE': {'name': 'BSD License'},
-    'CONTACT': {'name': 'Daniel Ale', 'email': 'daniel.ale@prunedge.com'},
+    'CONTACT': {'name': 'Nimah Onize', 'email': 'daniel.ale@prunedge.com'},
 
 }
 
@@ -194,3 +194,5 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTHENTICATION_BACKENDS = ['core.backends.CustomBackend']
