@@ -150,7 +150,7 @@ class InitializePasswordReesetSerializer(serializers.Serializer):
 
 
 
-class CreatePasswordSerializer(serializers.Serializer):
+class ResetPasswordSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
     password = serializers.CharField(required=True)
     confirm_password = serializers.CharField(required=True)

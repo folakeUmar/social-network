@@ -1,18 +1,14 @@
-from rest_framework_simplejwt.views import TokenObtainPairView
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import viewsets, status
-from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.decorators import action
 
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .models import User
-from .serializers import VerifyTokenSerializer, CustomObtainTokenPairSerializer, CreateUserSerializer, UserRegisterSerializer, InitializePasswordReesetSerializer, CreatePasswordSerializer
+
+from .serializers import (VerifyTokenSerializer, CustomObtainTokenPairSerializer, CreateUserSerializer, 
+                          UserRegisterSerializer, InitializePasswordReesetSerializer, ResetPasswordSerializer)
 
 
 CACHE_TTL = getattr(settings, "CACHE_TTL", DEFAULT_TIMEOUT)
@@ -43,8 +39,8 @@ class AuthViewSet(viewsets.ModelViewSet):
             return UserRegisterSerializer   
         elif self.action == 'initialize_reset':
             return InitializePasswordReesetSerializer
-        elif self.action == 'create_password':
-            return CreatePasswordSerializer
+        elif self.action == 'reset_password':
+            return ResetPasswordSerializer
         return super().get_serializer_class()
     
 
@@ -101,9 +97,9 @@ class AuthViewSet(viewsets.ModelViewSet):
     @action(
             methods=['POST'],
             detail=False,
-            url_path='create-password',
+            url_path='reset-password',
     )
-    def create_password(self, request):
+    def reset_password(self, request):
         user = request.user
         serializer = self.get_serializer(data=request.data, instance=user)
         if serializer.is_valid():
