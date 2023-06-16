@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .models import User
-from .serializers import VerifyTokenSerializer, CustomObtainTokenPairSerializer, CreateUserSerializer, UserRegisterSerializer, InitializePasswordReesetSerializer
+from .serializers import VerifyTokenSerializer, CustomObtainTokenPairSerializer, CreateUserSerializer, UserRegisterSerializer, InitializePasswordReesetSerializer, CreatePasswordSerializer
 
 
 CACHE_TTL = getattr(settings, "CACHE_TTL", DEFAULT_TIMEOUT)
@@ -43,6 +43,8 @@ class AuthViewSet(viewsets.ModelViewSet):
             return UserRegisterSerializer   
         elif self.action == 'initialize_reset':
             return InitializePasswordReesetSerializer
+        elif self.action == 'create_password':
+            return CreatePasswordSerializer
         return super().get_serializer_class()
     
 
@@ -90,9 +92,25 @@ class AuthViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             serializer.save()
             return Response(
+                {"success": True, "data": serializer.data}, status=status.HTTP_200_OK
+            )
+        return Response(
+            {"success": False, "errors": serializer.errors}, status.HTTP_400_BAD_REQUEST
+        )
+
+    @action(
+            methods=['POST'],
+            detail=False,
+            url_path='create-password',
+    )
+    def create_password(self, request):
+        user = request.user
+        serializer = self.get_serializer(data=request.data, instance=user)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
                 {"success": True, "data": serializer.data}, status=status.HTTP_201_CREATED
             )
         return Response(
             {"success": False, "errors": serializer.errors}, status.HTTP_400_BAD_REQUEST
         )
-            
