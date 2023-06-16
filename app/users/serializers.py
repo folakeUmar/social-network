@@ -113,10 +113,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return super().validate(attrs)
     
     def update(self, instance, validated_data):
-        confirm_password = validated_data.pop('confirm_password', None)
         password = validated_data['password']
-        print(instance.password)
-        super().update(instance, validated_data)
         instance.set_password(password)
         instance.save()
         return instance
@@ -147,15 +144,35 @@ class InitializePasswordReesetSerializer(serializers.Serializer):
                         'token': token.token,
                         'url': f"{settings.CLIENT_URL}/passwordreset/?token={token.token}",
         }
+        print(token.token)
         send_password_reset_email.delay(email_data)
         return user
 
 
 
+class ResetPasswordSerializer(serializers.Serializer):
+    token = serializers.CharField(required=True)
+    password = serializers.CharField(required=True)
+    confirm_password = serializers.CharField(required=True)
 
-"""
-to actually reset password:
-1. accepts token, password, confirm_password
-2. check if token is valid
-3. 
-"""
+    def to_representation(self, instance):
+        return CreateUserSerializer(instance).data
+    
+    def validate_token(self, attrs):
+        token = attrs['token']
+        token = Token.objects.filter(token=token).first() 
+        password = attrs['password']
+        confirm_password = attrs['confirm_password']
+        if not token:
+            raise serializers.ValidationError("Invalid Token!")
+        attrs['token'] = token   
+        if password != confirm_password:
+            raise serializers.ValidationError('Passwords do not match!')
+        return super().validate(attrs)
+
+    def update(self, instance, validated_data):
+        password = validated_data['password']
+        instance.set_password(password)
+        instance.save()
+        return instance
+    
