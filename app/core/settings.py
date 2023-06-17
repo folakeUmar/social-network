@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'core.celery.CeleryConfig',
     'users',
+    'connections',
 ]
 
 MIDDLEWARE = [
