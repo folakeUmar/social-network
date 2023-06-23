@@ -57,7 +57,8 @@ class CreateUserSerializer(serializers.Serializer):
         user.save()
         token = Token.objects.create(token=token, user=user)
         user_data = {'email': email, 'token': token.token,
-                     'url': f"{settings.CLIENT_URL}/register/"}    
+                     'url': f"{settings.CLIENT_URL}/register/"}   
+        print(token.token) 
         user_code_email.delay(user_data)
         return user
     

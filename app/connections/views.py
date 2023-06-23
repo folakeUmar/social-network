@@ -23,8 +23,8 @@ class ConnectionViewSet(viewsets.ModelViewSet):
         url_path='sender-request',
     )
     def sender_request(self, request):
-        serializer = self.get_serializer_class(data=request.data, context={'sender':'request.user'}) 
-        if serializer.valid():
+        serializer = self.get_serializer(data=request.data, context={'sender':'request.user'}) 
+        if serializer.is_valid():
             return Response({'success':True, 'message':'connection request successfully sent'}, status=status.HTTP_200_OK)
         
     
