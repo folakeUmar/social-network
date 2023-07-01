@@ -4,7 +4,7 @@ from core.models import AuditableModel
 from .enums import CONNECTION_STATUS
 
 
-class Connect(AuditableModel):
+class Connection(AuditableModel):
     sender = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="connect_sender" )
     receiver = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="connect_receiver")
     status = models.CharField(max_length=255, choices=CONNECTION_STATUS)

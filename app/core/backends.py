@@ -5,9 +5,9 @@ from django.db.models import Q
 
 
 class CustomBackend(ModelBackend):
-    def authenticate(self, request, email=None, password=None, **kwargs):
+    def authenticate(self, request, username=None, email=None, password=None, **kwargs):
         UserModel = get_user_model()
-        username = email
+        username = username or email
 
         try:
             user = get_user_model().objects.filter(
@@ -27,3 +27,4 @@ class CustomBackend(ModelBackend):
         except UserModel.DoesNotExist:
             return None
         return user if self.user_can_authenticate(user) else None
+    
