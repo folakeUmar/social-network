@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .serializers import (VerifyTokenSerializer, CustomObtainTokenPairSerializer, CreateUserSerializer, 
+from .serializers import (VerifyTokenSerializer, CustomObtainTokenPairSerializer, CreateUserSerializer, ListUserSerializer,
                           UserRegisterSerializer, InitializePasswordReesetSerializer, ResetPasswordSerializer)
 
 
@@ -26,8 +26,8 @@ class AuthViewSet(viewsets.ModelViewSet):
     """User ViewSets"""
 
     queryset = get_user_model().objects.all()
-    serializer_class = CreateUserSerializer
-    http_method_names = ["get", "post"]
+    serializer_class = ListUserSerializer
+    http_method_names = ["get", "post", "patch"]
   
     def get_serializer_class(self):
      
@@ -110,3 +110,18 @@ class AuthViewSet(viewsets.ModelViewSet):
         return Response(
             {"success": False, "errors": serializer.errors}, status.HTTP_400_BAD_REQUEST
         )
+    
+    # @action(
+    #     methods=['GET'],
+    #     detail=False,
+    #     url_path='get-users',
+    # )
+    # def get_users(self, request):
+    #     serializer = self.get_serializer_class(many=True).data
+    #     if serializer.is_valid():
+    #         return Response(
+    #             {"success": True, "data": serializer.data}, status=status.HTTP_200_OK
+    #         )
+    #     return Response(
+    #         {"success": False, "errors": serializer.errors}, status.HTTP_400_BAD_REQUEST
+    #     )

@@ -57,10 +57,17 @@ class CreateUserSerializer(serializers.Serializer):
         user.save()
         token = Token.objects.create(token=token, user=user)
         user_data = {'email': email, 'token': token.token,
-                     'url': f"{settings.CLIENT_URL}/register/"}    
+                     'url': f"{settings.CLIENT_URL}/register/"}
+        print(token.token)   
         user_code_email.delay(user_data)
         return user
     
+
+class ListUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = '__all__'
+
 
 class VerifyTokenSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
@@ -113,12 +120,14 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return super().validate(attrs)
     
     def update(self, instance, validated_data):
+        confirm_password = validated_data.pop('confirm_password', None)
         password = validated_data['password']
+        super().update(instance, validated_data)
         instance.set_password(password)
         instance.save()
         return instance
-    
-    
+   
+
 class InitializePasswordReesetSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
 
@@ -158,7 +167,7 @@ class ResetPasswordSerializer(serializers.Serializer):
     def to_representation(self, instance):
         return CreateUserSerializer(instance).data
     
-    def validate_token(self, attrs):
+    def validate(self, attrs):
         token = attrs['token']
         token = Token.objects.filter(token=token).first() 
         password = attrs['password']
@@ -174,5 +183,6 @@ class ResetPasswordSerializer(serializers.Serializer):
         password = validated_data['password']
         instance.set_password(password)
         instance.save()
+        # super().update(instance, validated_data)
         return instance
     
