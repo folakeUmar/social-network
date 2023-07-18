@@ -1,6 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import get_user_model, authenticate
 from django.conf import settings
+from django.contrib.auth.hashers import make_password
 
 from email_validator import validate_email, EmailNotValidError
  
@@ -111,16 +112,8 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             'verified': {'read_only': True},
             'group': {'read_only': True},
         }
-
-    def validate(self, attrs):
-        password = attrs['password']
-        confirm_password = attrs['confirm_password']
-        if password != confirm_password:
-            raise serializers.ValidationError('Passwords do not match!')
-        return super().validate(attrs)
     
     def update(self, instance, validated_data):
-        confirm_password = validated_data.pop('confirm_password', None)
         password = validated_data['password']
         super().update(instance, validated_data)
         instance.set_password(password)
