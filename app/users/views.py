@@ -108,20 +108,5 @@ class AuthViewSet(viewsets.ModelViewSet):
                 {"success": True, "data": serializer.data}, status=status.HTTP_201_CREATED
             )
         return Response(
-            {"success": False, "errors": serializer.errors}, status.HTTP_400_BAD_REQUEST
+            {"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
         )
-    
-    # @action(
-    #     methods=['GET'],
-    #     detail=False,
-    #     url_path='get-users',
-    # )
-    # def get_users(self, request):
-    #     serializer = self.get_serializer_class(many=True).data
-    #     if serializer.is_valid():
-    #         return Response(
-    #             {"success": True, "data": serializer.data}, status=status.HTTP_200_OK
-    #         )
-    #     return Response(
-    #         {"success": False, "errors": serializer.errors}, status.HTTP_400_BAD_REQUEST
-    #     )
